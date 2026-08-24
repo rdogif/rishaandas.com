@@ -27,7 +27,8 @@
         height: 100vh;
         display: flex;
         justify-content: center;
-        column-gap: 10px;
+        gap: 10px;
+        flex-wrap: wrap;
     }
     .box {
         box-shadow: 0px 0px 20px 0px rgb(134, 37, 118);
@@ -118,11 +119,11 @@
     <div class="container">
         <a href="https://rishaandas.com/portfolio/" target="_self" style="height: fit-content; text-decoration: none;"> <div class="box"><i style="margin-top: 30%;" class="fa-solid fa-briefcase fa-10x"></i><h1>Portfolio</h1></div> </a>
         <a id="stank"  target="_self" style="height: fit-content; text-decoration: none;"><div class="box" ><i style="margin-top: 30%;" class="fa-solid fa-link fa-10x"></i><h1>secretSites</h1></div></a>
-        <div class="stankpop"><button id="t"><i   class="fa-solid fa-circle-xmark"></i></button>
-        <h1 style="position: fixed; left: 34px; top: 60px;">Enter password for secretSites</h1>
-        <form id="forms"><input enterkeyhint="enter" id="stankpass" ><button type="submit" id="ew">Submit</button></form>
-
-        </div>
+                <div class="stankpop"><button id="t"><i   class="fa-solid fa-circle-xmark"></i></button>
+                <h1 style="position: fixed; left: 34px; top: 60px;">Enter password for secretSites</h1>
+                <form id="forms"><input enterkeyhint="enter" id="stankpass" ><button type="submit" id="ew">Submit</button></form>
+                </div>
+        <a class="unfinished" target="_self" style="height: fit-content; text-decoration: none;"> <div class="box"><i style="margin-top: 30%;" class="fa-brands fa-youtube fa-10x"></i><h1>Youtube Page</h1></div> </a>
 
 
 
@@ -133,6 +134,24 @@
     
 </body>
 <script>
+
+    document.querySelectorAll(".unfinished").forEach((obj)=>{
+        obj.addEventListener("click",()=>{
+            let text = obj.querySelector("h1").textContent;
+            obj.querySelector(".box").style.color = "red"
+            obj.querySelector("h1").textContent = "Unfinished"
+            obj.classList.remove("shake");
+            void obj.offsetWidth;
+            obj.classList.add("shake");
+            setTimeout(() => {
+                obj.querySelector(".box").style.color = ""
+                obj.querySelector("h1").textContent = text
+            }, 250);
+            
+        })
+    })
+
+
     document.querySelector(".stankpop").style.display = "none";
     document.getElementById("stank").addEventListener("click",()=>{
         document.querySelector(".stankpop").style.display = "";

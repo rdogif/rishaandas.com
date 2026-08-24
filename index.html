@@ -138,7 +138,7 @@
     document.querySelectorAll(".unfinished").forEach((obj)=>{
         obj.addEventListener("click",()=>{
             let text = obj.querySelector("h1").textContent;
-            obj.querySelector(".box").style.color = "red"
+            //obj.querySelector(".box").style.color = "red"
             obj.querySelector("h1").textContent = "Unfinished"
             obj.classList.remove("shake");
             void obj.offsetWidth;

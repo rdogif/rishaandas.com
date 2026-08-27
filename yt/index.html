@@ -55,23 +55,57 @@ background: linear-gradient(90deg, rgba(10, 14, 57, 1) 0%, rgba(9, 9, 121, 1) 72
         filter: drop-shadow(5px 5px 5px black);
         
     }
-
+    .c2 {
+        box-shadow: 0px 0px 10px 5px cyan;
+        background: linear-gradient(to right, rgb(0, 157, 255), rgb(0, 49, 128), blue, indigo, rgb(170, 130, 238));
+        border-radius: 0.4em;
+        display: block;
+        width: 300px;
+        height: 400px;
+        outline: rgb(114, 238, 243) 3px solid;
+        margin-left: auto;
+        margin-right: 100px;
+    }
 
 </style>
+<body>
     <div class="container1">
         <h1 class="gradText1">Codeitdotjs</h1>
         <p1 style="padding: 0.3px; font-size: 0.8em; color: rgb(190, 113, 218);">Codeitdotjs (or just codeit) is the upcoming youtube channel created by Rishaan Das
 . This channel covers beginner friendly tutorials on web development and other things.
-
-
-        </p1>
+</p1>
         
 
 
 
     </div>
+    <div style="display: flex;">
 <a href="https://www.youtube.com/@codeitdotjs" target="_self"><i class="fa-brands fa-youtube fa-10x"></i></a>
-<body>
-    
+
+<div class="c2"><img id="hi" width="300px" height="400px" style="object-fit: cover;" ><p style="text-align: center; color: white;"></p></div>
+    </div>
 </body>
+
+
+<script>
+    
+  
+        const dog =  fetch("https://dog.ceo/api/breeds/image/random")
+        .then(response => response.json())
+        .then(data=>{ document.getElementById("hi").src = data.message; console.log(data)})
+       
+         
+       
+    
+    
+    
+
+
+</script>
+
+
+
+
+
+
 </html>

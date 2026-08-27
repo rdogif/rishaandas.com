@@ -11,8 +11,13 @@
 </head>
 <style>
 * {
+    position: relative;
+    z-index: 2;
     user-select: none;
+     perspective: 200px;
+     transform: rotateX(1deg);
 }
+
 html {
     scrollbar-width: none;
     
@@ -30,7 +35,10 @@ html {
 
  .shadowed {
     box-shadow: black 5px 5px 10px;
+    transition: 0.1s ease-in-out;
+    outline: 1px solid rgb(10, 15, 107);
  }
+
 
  .header{
     font-size: 2em;
@@ -44,11 +52,15 @@ html {
     opacity: 0;
     transform: translateY(50px);
     transition: 0.3s ease ;
+    outline: none;
 }
 .pop.show {
+   
+    
     transform: translateY(-50px);
     opacity: 1;
 }
+
 .flexer2{
     display: flex;
     position: relative;
@@ -99,12 +111,24 @@ transition: transform 0.3s ease;
     outline: 1px rgb(0, 0, 0) solid;
 }
 
-
+.ciMouse {
+    
+    z-index: 1;
+    position: fixed;
+   
+    background-color: transparent;
+    
+    box-shadow: 0px 0px 500px 100px #0022ff;
+    
+}
 
 
 
 </style>
 <body>
+
+<div class="ciMouse"></div>
+
 <nav style="z-index: 2; background-color: rgb(19, 26, 103); 
 width: auto; height: fit-content; position: relative;" >
 <div style=" margin: 0px; padding: 0px; font-size: 3em; margin-left: 10px; font-weight: bolder; text-shadow: 0px 0px 10px black;">Rishaan's Portfolio</div>
@@ -167,11 +191,24 @@ background-color: rgb(16, 22, 90); border-radius: 2em; padding: 10px; margin: 10
 <div class="flexer2 pop">
     
 <a  href="https://rdogif.github.io/portfolio1/" style="text-decoration: none; color: unset;" target="_blank"> <div class="container" style="align-items: center; display: flex; flex-direction: column; justify-content: center;">Old Projects<i class="fa-brands fa-github"></i></div></a>
-<a  href="https://www.roblox.com/users/1170371171/profile" style="text-decoration: none; color: unset;" target="_blank"> <div class="container" style="align-items: center; display: flex; flex-direction: column; justify-content: center;">Roblox Creations<i class="fa-brands fa-roblox-creator-studio"></i></div></a>
+<a  href="https://rdogif.github.io/portfolio1/" style="text-decoration: none; color: unset;" target="_blank"> <div class="container" style="align-items: center; display: flex; flex-direction: column; justify-content: center;">Roblox Creations<i class="fa-brands fa-roblox-creator-studio"></i></div></a>
 </div>
+
+
+
+
+
 </body>
 <script>
-    
+    // /transform: translate(client.x, client.y);
+    const circl = document.querySelector(".ciMouse");
+    document.addEventListener("mousemove",(event)=>{
+        console.log(event)
+        circl.style.transform = `translate(${event.clientX}px,${event.clientY}px)`
+    })
+
+
+
     document.getElementById("skip").addEventListener("click",()=>{
         document.getElementById("arrival").scrollIntoView({block:"start" ,behavior:"smooth"})
     })
@@ -183,8 +220,12 @@ background-color: rgb(16, 22, 90); border-radius: 2em; padding: 10px; margin: 10
         entries.forEach(entry => {
             if(entry.isIntersecting) {
                 entry.target.classList.add("show");
+                entry.target.classList.add("highlight");
             }
-            
+            if(!entry.isIntersecting) {
+                
+                entry.target.classList.remove("highlight");
+            }
         });
 
     })

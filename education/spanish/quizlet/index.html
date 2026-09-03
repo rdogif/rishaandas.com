@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quizlet Recreation</title>
+<style>
+  * { box-sizing: border-box; }
+  :root{
+    --ink:#f6f7fb;
+    --muted:#a8b0c6;
+    --blue:#4255ff;
+    --light:#252936;
+    --line:#353a49;
+    --navy:#2e2c9f;
+  }
+  body{
+    margin:0;
+    font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    color:var(--ink);
+    background:#171a21;
+  }
+
+  .topbar{
+    height:88px;
+    display:flex;
+    align-items:center;
+    gap:34px;
+    padding:0 29px;
+    border-bottom:1px solid #2b303d;
+    position:sticky;
+    top:0;
+    background:#171a21;
+    z-index:10;
+  }
+  .logo{
+    font-size:38px;
+    font-weight:800;
+    color:var(--blue);
+    letter-spacing:-1.7px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .navitem{
+    font-size:18px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .chev{ font-size:20px; transform:translateY(-1px); }
+
+  .search{
+    flex:1;
+    max-width:755px;
+    min-width:340px;
+    height:52px;
+    border-radius:10px;
+    background:#252936;
+    display:flex;
+    align-items:center;
+    padding:0 20px;
+    color:#a9b1c8;
+    font-size:20px;
+    font-weight:600;
+  }
+  .search .icon{font-size:28px; margin-right:14px; line-height:1;}
+  .search input{
+    border:0; outline:0; background:transparent;
+    width:100%; font:inherit; color:#f1f3f8;
+  }
+  .create{
+    margin-left:auto;
+    font-size:18px;
+    color:#4255ff;
+    font-weight:700;
+    cursor:pointer;
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+  .login{
+    border:0; background:var(--blue); color:white;
+    height:52px; padding:0 24px; border-radius:26px;
+    font-size:18px; font-weight:700; cursor:pointer;
+  }
+
+  .page{
+    padding:28px 50px 40px 52px;
+  }
+  .headline-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    max-width:980px;
+  }
+  h1{
+    margin:0;
+    font-size:43px;
+    line-height:1.1;
+    letter-spacing:-1.2px;
+  }
+  .rating{
+    margin-top:17px;
+    display:flex;
+    gap:11px;
+    align-items:center;
+    font-size:20px;
+    font-weight:600;
+    color:#b7bfd4;
+  }
+  .star{ color:#ffcf26; font-size:29px; }
+  .action-icons{
+    display:flex;
+    gap:12px;
+    margin-top:4px;
+  }
+  .round-action{
+    width:56px; height:56px; border-radius:28px;
+    border:0; background:#242833;
+    display:grid; place-items:center;
+    color:#b7bfd4; font-size:25px; cursor:pointer;
+  }
+  .groups-pill{
+    height:56px; padding:0 24px; border:0; background:#242833; border-radius:28px;
+    color:#b7bfd4; font-size:18px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; gap:10px;
+  }
+
+  .tabs{
+    display:grid;
+    grid-template-columns: 320px 320px 320px;
+    gap:18px;
+    margin-top:38px;
+    width:max-content;
+  }
+  .tab{
+    height:71px;
+    border:0;
+    background:#242833;
+    border-radius:10px;
+    font-size:20px;
+    color:#f2f4fa;
+    font-weight:700;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:18px;
+  }
+  .tab:hover,.tab.active{ box-shadow:0 2px 10px rgba(66,85,255,.08); background:#2a3040; }
+  .tab-icon{ font-size:29px; color:#4255ff; }
+
+  .content-grid{
+    margin-top:28px;
+    display:grid;
+    grid-template-columns: minmax(720px, 990px) 1fr;
+    gap:50px;
+    align-items:start;
+  }
+
+  .card-wrap{ position:relative; }
+  .flashcard{
+    height:555px;
+    background:#20242d;
+    border-radius:20px;
+    box-shadow:0 12px 34px rgba(0,0,0,.38);
+    border:1px solid #303644;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    overflow:hidden;
+  }
+  .flashcard .small-icons{
+    position:absolute;
+    top:33px;
+    right:45px;
+    display:flex;
+    gap:29px;
+    color:#c4cbe0;
+    font-size:24px;
+  }
+  .card-text{
+    font-size:44px;
+    font-weight:400;
+    letter-spacing:-.7px;
+    transition:opacity .18s ease;
+    text-align:center;
+    padding:0 50px;
+  }
+  .flipbar{
+    position:absolute;
+    bottom:0; left:0; right:0;
+    height:54px;
+    background:#2d2a9f;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    font-weight:700;
+    gap:8px;
+  }
+
+  .controls{
+    display:grid;
+    grid-template-columns:70px 70px 1fr 70px;
+    align-items:center;
+    margin-top:20px;
+    height:68px;
+  }
+  .circle-btn{
+    width:54px; height:54px; border-radius:50%;
+    border:0; background:#252936;
+    display:grid; place-items:center;
+    font-size:25px; color:#c4cbe0; cursor:pointer;
+  }
+  .pager{
+    display:flex; align-items:center; justify-content:center;
+    gap:55px; font-size:21px; color:#d5d9e4;
+    user-select:none;
+  }
+  .arrow{
+    border:0;background:transparent;font-size:42px;color:#d0d5e2;cursor:pointer;line-height:1;
+  }
+  .arrow:disabled{ color:#555c6d; cursor:default; }
+  .fullscreen{
+    justify-self:end;
+    border:0;background:transparent;font-size:36px;color:#c4cbe0;cursor:pointer;
+  }
+
+  .ad{
+    margin-top:-77px;
+    min-width:390px;
+  }
+  .ad-box{
+    width:390px;
+    height:67px;
+    border:2px solid #4056aa;
+    box-shadow:0 0 0 1px #bfc3cc inset;
+    display:flex;
+    align-items:center;
+    background:#171a21;
+    overflow:hidden;
+  }
+  .target{
+    width:50px;height:50px;border-radius:50%;border:8px solid #e53935;margin-left:12px;
+    position:relative;
+  }
+  .target::after{
+    content:"";width:12px;height:12px;border-radius:50%;background:#e53935;
+    position:absolute;inset:0;margin:auto;
+  }
+  .ad-copy{ margin-left:12px; line-height:1; }
+  .ad-copy b{ font-size:20px; }
+  .ad-copy .red{ color:#e7352f; font-size:17px; margin-left:5px; }
+  .terms{ font-size:9px; margin-top:6px; color:#444; }
+  .spark{
+    margin-left:auto; margin-right:12px; width:25px;height:25px; transform:rotate(45deg);
+    border:2px solid #4a4f75; box-shadow:0 0 0 5px #fff;
+  }
+  .adchoices{
+    align-self:flex-start;
+    margin-left:-70px;
+    font-size:12px;
+    color:#a5a8b2;
+    margin-top:5px;
+  }
+  .toast{
+    position:fixed;left:50%;bottom:25px;transform:translateX(-50%);
+    background:#0f1117;color:#fff;padding:12px 18px;border-radius:10px;
+    font-size:14px;opacity:0;pointer-events:none;transition:.2s;
+  }
+  .toast.show{opacity:1;}
+  @media (max-width: 1100px){
+    .ad{display:none;}
+    .content-grid{grid-template-columns:1fr;}
+    .tabs{grid-template-columns:repeat(3,minmax(180px,1fr)); width:100%;}
+    .search{min-width:220px;}
+  }
+
+  body { background:#171a21; }
+  .topbar { background:#171a21; }
+  .page { background:#171a21; min-height:calc(100vh - 88px); }
+  .search input::placeholder { color:#8e97ad; }
+  .tab, .round-action, .groups-pill, .circle-btn { border:1px solid #2f3543; }
+  .tab:hover, .round-action:hover, .groups-pill:hover, .circle-btn:hover {
+    background:#2a3040;
+  }
+  .flashcard { color:#f6f7fb; }
+  .ad-box { background:#f9f9fb; color:#1f2230; }
+
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo" id="logo">Quizlet</div>
+    <div class="navitem">Study tools <span class="chev">⌄</span></div>
+    <div class="navitem">Subjects <span class="chev">⌄</span></div>
+    <div class="search"><span class="icon">⌕</span><input id="searchBox" placeholder="Search for flashcards" /></div>
+    <div class="create" id="createBtn"><span style="font-size:30px;font-weight:400;">＋</span> Create</div>
+    <button class="login" id="loginBtn">Log in</button>
+  </header>
+
+  <main class="page">
+    <div class="headline-row">
+      <div>
+        <h1>S3xU1: Lista completa</h1>
+        <div class="rating"><span class="star">★</span><span>4.7 (7 reviews)</span></div>
+      </div>
+      <div class="action-icons">
+        <button class="round-action" title="Save" id="saveBtn">♡</button>
+        <button class="groups-pill" id="groupsBtn">♟ <span>Groups</span></button>
+        <button class="round-action" title="Share" id="shareBtn">⇧</button>
+        <button class="round-action" title="More" id="moreBtn">•••</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="Flashcards"><span class="tab-icon">▰</span>Flashcards</button>
+      <button class="tab" data-tab="Learn"><span class="tab-icon">◌</span>Learn</button>
+      <button class="tab" data-tab="Test"><span class="tab-icon">▣</span>Test</button>
+    </div>
+
+    <div class="content-grid">
+      <section class="card-wrap">
+        <div class="flashcard" id="flashcard">
+          <div class="small-icons"><span id="soundBtn" title="Sound" style="cursor:pointer;">🔊</span><span id="favBtn" title="Favorite" style="cursor:pointer;">★</span></div>
+          <div class="card-text" id="cardText">El colegio/La preparatoria</div>
+          <div class="flipbar">Click the card to flip ☝</div>
+        </div>
+
+        <div class="controls">
+          <button class="circle-btn" id="playBtn">▶</button>
+          <button class="circle-btn" id="shuffleBtn">⤨</button>
+          <div class="pager">
+            <button class="arrow" id="prevBtn">←</button>
+            <span><span id="counter">1</span> / 81</span>
+            <button class="arrow" id="nextBtn">→</button>
+          </div>
+          <button class="fullscreen" id="fullBtn">⌗</button>
+        </div>
+      </section>
+
+      <aside class="ad">
+        <div class="ad-box">
+          <div class="target"></div>
+          <div class="ad-copy">
+            <div><b>school supplies</b><span class="red">50¢ and under</span></div>
+            <div class="terms">*Subject to terms & conditions.</div>
+          </div>
+          <div class="spark"></div>
+          <div class="adchoices">AdChoices</div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  const cards = [
+    ["El colegio/La preparatoria","High school"],
+    ["La clase","Class"],
+    ["El estudiante","Student"],
+    ["La tarea","Homework"],
+    ["El examen","Exam"],
+    ["La biblioteca","Library"],
+    ["El profesor","Teacher"],
+    ["La mochila","Backpack"]
+  ];
+
+  let i = 0;
+  let flipped = false;
+  let playing = false;
+  let timer = null;
+
+  const cardText = document.getElementById("cardText");
+  const counter = document.getElementById("counter");
+  const flashcard = document.getElementById("flashcard");
+  const prev = document.getElementById("prevBtn");
+  const next = document.getElementById("nextBtn");
+
+  function render(){
+    cardText.textContent = cards[i % cards.length][flipped ? 1 : 0];
+    counter.textContent = i + 1;
+    prev.disabled = i === 0;
+  }
+
+  flashcard.addEventListener("click", e => {
+    if(e.target.closest(".small-icons")) return;
+    flipped = !flipped;
+    render();
+  });
+
+  next.onclick = () => { i = Math.min(80, i + 1); flipped = false; render(); };
+  prev.onclick = () => { i = Math.max(0, i - 1); flipped = false; render(); };
+
+  document.getElementById("shuffleBtn").onclick = () => {
+    i = Math.floor(Math.random()*81);
+    flipped = false;
+    render();
+    toast("Shuffled");
+  };
+
+  document.getElementById("playBtn").onclick = function(){
+    playing = !playing;
+    this.textContent = playing ? "Ⅱ" : "▶";
+    clearInterval(timer);
+    if(playing){
+      timer = setInterval(()=>{
+        i = (i + 1) % 81;
+        flipped = false;
+        render();
+      },1500);
+      toast("Auto-play started");
+    } else toast("Auto-play paused");
+  };
+
+  document.querySelectorAll(".tab").forEach(btn=>{
+    btn.onclick=()=>{
+      document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+      btn.classList.add("active");
+      toast(btn.dataset.tab + " selected");
+    }
+  });
+
+  document.getElementById("saveBtn").onclick = function(){
+    this.textContent = this.textContent === "♡" ? "♥" : "♡";
+    toast(this.textContent === "♥" ? "Saved" : "Removed from saved");
+  };
+  document.getElementById("favBtn").onclick = function(){
+    this.style.color = this.style.color ? "" : "#4255ff";
+    toast("Favorite toggled");
+  };
+  document.getElementById("groupsBtn").onclick = ()=>toast("Groups opened");
+  document.getElementById("shareBtn").onclick = async ()=>{
+    if(navigator.clipboard){ await navigator.clipboard.writeText(location.href); toast("Link copied"); }
+    else toast("Share");
+  };
+  document.getElementById("moreBtn").onclick = ()=>toast("More options");
+  document.getElementById("createBtn").onclick = ()=>toast("Create button clicked");
+  document.getElementById("loginBtn").onclick = ()=>toast("Login button clicked");
+  document.getElementById("logo").onclick = ()=>window.scrollTo({top:0,behavior:"smooth"});
+
+  document.getElementById("searchBox").addEventListener("keydown", e=>{
+    if(e.key==="Enter" && e.target.value.trim()) toast('Searching for "'+e.target.value.trim()+'"');
+  });
+
+  document.getElementById("soundBtn").onclick = e=>{
+    e.stopPropagation();
+    if("speechSynthesis" in window){
+      const u = new SpeechSynthesisUtterance(cardText.textContent);
+      u.lang = flipped ? "en-US" : "es-ES";
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
+    } else toast("Sound unavailable");
+  };
+
+  document.getElementById("fullBtn").onclick = async ()=>{
+    const el = document.querySelector(".card-wrap");
+    if(!document.fullscreenElement) await el.requestFullscreen?.();
+    else await document.exitFullscreen?.();
+  };
+
+  function toast(msg){
+    const t=document.getElementById("toast");
+    t.textContent=msg; t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"),1200);
+  }
+  render();
+</script>
+</body>
+</html>

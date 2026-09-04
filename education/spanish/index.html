@@ -187,7 +187,9 @@
 <script>
     pic();
     async function pic() {
-        let cat = await fetch("https://api.thecatapi.com/v1/images/search");
+        let cat = await fetch("https://api.thecatapi.com/v1/images/search",{headers:{
+            "x-api-key": "live_iTGAkgcgKctUBrLPRHe5ktDV3Ck9PATlzCqEkeSRhWeu93P02oiwxmxfuxgWCXrq"
+        }});
         let response = await cat.json();
         
         document.getElementById("secret").src = response[0].url

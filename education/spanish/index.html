@@ -26,8 +26,26 @@
     h2 {
         background-color: rgb(143, 25, 143);
     }
+    #secret {
+        top: 10px;
+        left: 10px;
+        border-radius: 4px;
+        position: absolute;
+        display: block;
+        background-color: rgb(84, 15, 67);
+        width: 20px;
+        height: 20px;
+        box-shadow: 2px 2px 5px 1px black;
+        border: none;
+        outline: none;
+    }
+
 </style>
 <body>
+
+    <a href="https://rishaandas.com/education/spanish/quizlet/"><img  id="secret"></a> 
+
+
     <h1>Spanish Cheat Sheet</h1>
 
 <h2>Complex Sentences</h2>
@@ -164,4 +182,19 @@
 
     
 </body>
+
+
+<script>
+    pic();
+    async function pic() {
+        let cat = await fetch("https://api.thecatapi.com/v1/images/search");
+        let response = await cat.json();
+        
+        document.getElementById("secret").src = response[0].url
+        
+    }
+
+
+
+</script>
 </html>

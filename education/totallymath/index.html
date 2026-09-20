@@ -14,6 +14,7 @@
         --main : rgb(36, 13, 57);
         --main2: rgb(59, 24, 91); 
         --snd: rgb(178, 135, 221);
+        --rpx: 10px;
     }
     body{
         background-color: var(--main);
@@ -47,7 +48,7 @@
         animation: rotate 2s  infinite ease-in-out;
     }
     .games {
-
+       margin-top: 50px;
         display: grid;
         
         justify-content: center;
@@ -55,24 +56,41 @@
         gap: 10px;
     }
     .game {
+         border-radius: var(--rpx);
         border: 2px solid rgb(183, 79, 224);
         box-shadow: 0px 0px 20px 0px rgb(183, 79, 224) ;
-    
+        overflow-wrap: break-word;
         display: flex;
-        justify-content: center;
-        align-items: end;
+        justify-content: start;
+        flex-direction:column;
+        align-content: center;
         height: 300px;
         background-color: var(--main2);
         width: 200px;
         font-size: 1em;
         transition: 0.1s ease-in-out;
+        text-align: center;
+        padding-bottom: 20px;
+    }
+    .game img {
+        border-radius: var(--rpx) var(--rpx) 0px 0px;
+        object-fit: cover;
+        
+        width: 200px;
+    }
+    .game h2 {
+        
+       
     }
     .game:hover{
+        cursor: pointer;
          box-shadow: 0px 0px 20px 0px rgb(255, 255, 255) ;
         border-color: rgb(255, 255, 255);
         transform: scale(1.05);
-        font-size: 2em;
+    
+       
     }
+    
 
 
 
@@ -80,11 +98,27 @@
 <body>
     <h1>Totally Math!<br><i style="margin-top: 20px;" class="fa-solid fa-gamepad"></i></h1>
     <div class="games">
-        <div class="game">RishaanBoss 1</div>
-        <div class="game">fn</div>
-        <div class="game">fn</div>
-        <div class="game">fn</div>
-        <div class="game">fn</div>
+        <div id="rb1" class="game"><img src="https://www.rishaandas.com/education/totallymath/images/rishaanboss1.png"> <h2>Beat Boss Rishaan</h2><p style="margin-top: -14px;">Vibecoded slop game where you beat boss Rishaan (promise this site isnt vibecoded)<p></div>
+        
     </div>
 </body>
+<script>
+    const rd1 = document.getElementById("rb1");
+    rd1.addEventListener("click",()=>{
+        open("math1.html","_self")
+
+
+    })
+
+
+
+
+
+
+
+
+
+
+
+</script>
 </html>

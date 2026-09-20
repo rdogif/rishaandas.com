@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"math"</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Comic+Neue:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,805;1,805&display=swap" rel="stylesheet">
+</head>
+<script src="https://kit.fontawesome.com/f19d30c178.js" crossorigin="anonymous"></script>
+<style>
+    :root {
+        --main : rgb(36, 13, 57);
+        --main2: rgb(59, 24, 91); 
+        --snd: rgb(178, 135, 221);
+    }
+    body{
+        background-color: var(--main);
+        color: white;
+        font-family: "Comic Neue",cursive;
+        
+        
+
+    }
+    @keyframes rotate {
+        0% {
+            transform: rotateZ(5deg);
+        }
+        
+        50%{
+                transform: rotateZ(-5deg);
+        
+        }
+        100%{
+            transform: rotateZ(5deg);
+        }
+    }
+    h1 {
+        margin: 25px auto;
+        text-align: center;
+        background-color: blueviolet;
+        border-radius: 20%;
+        width: fit-content;
+        padding: 30px 60px;
+        box-shadow: 0px 0px 25px 1px var(--snd) ;
+        animation: rotate 2s  infinite ease-in-out;
+    }
+    .games {
+
+        display: grid;
+        
+        justify-content: center;
+        grid-template-columns: repeat(3,200px);
+        gap: 10px;
+    }
+    .game {
+        border: 2px solid rgb(183, 79, 224);
+        box-shadow: 0px 0px 20px 0px rgb(183, 79, 224) ;
+    
+        display: flex;
+        justify-content: center;
+        align-items: end;
+        height: 300px;
+        background-color: var(--main2);
+        width: 200px;
+        font-size: 1em;
+        transition: 0.1s ease-in-out;
+    }
+    .game:hover{
+         box-shadow: 0px 0px 20px 0px rgb(255, 255, 255) ;
+        border-color: rgb(255, 255, 255);
+        transform: scale(1.05);
+        font-size: 2em;
+    }
+
+
+
+</style>
+<body>
+    <h1>Totally Math!<br><i style="margin-top: 20px;" class="fa-solid fa-gamepad"></i></h1>
+    <div class="games">
+        <div class="game">RishaanBoss 1</div>
+        <div class="game">fn</div>
+        <div class="game">fn</div>
+        <div class="game">fn</div>
+        <div class="game">fn</div>
+    </div>
+</body>
+</html>

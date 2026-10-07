@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Homework Tracker · rishaandas.com</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tracker.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <nav aria-label="Site navigation"><a class="brand" href="/">rishaandas.com</a><div><a href="/">Quick Links</a><a href="/education/">Education</a><a href="/homework/" aria-current="page">Homework</a></div></nav>
+  <main>
+    <header class="hero"><p class="eyebrow">A little less last-minute.</p><h1>Homework tracker<span>.</span></h1><p>Every class. Every assignment. One place to keep up.</p></header>
+    <section class="connection" aria-label="Cloud connection"><p id="sync-status" role="status">Loading assignments…</p><div class="actions"><a id="connect" href="connect.html">Admin</a><button id="refresh" disabled>Refresh</button><button id="disconnect" hidden>Sign out</button></div></section>
+    <p id="notice" class="notice" role="alert" hidden></p>
+    <div class="layout read-only">
+      <section class="panel editor" aria-labelledby="editor-title" hidden><p class="eyebrow">Admin · Make a little progress</p><h2 id="editor-title">Add an assignment</h2>
+        <form id="assignment-form"><fieldset id="fields" disabled>
+          <label for="subject">Class / subject</label><input id="subject" name="subject" list="subjects" maxlength="100" placeholder="e.g. AP Physics 1" required><datalist id="subjects"></datalist>
+          <label for="name">Assignment name</label><input id="name" name="name" maxlength="200" placeholder="e.g. Page 42" required>
+          <label for="due-date">Due date</label><input id="due-date" name="due_date" type="date" min="1900-01-01" max="9999-12-31" required>
+          <label for="notes">Notes <span class="muted">(optional)</span></label><textarea id="notes" name="notes" maxlength="5000" rows="4" placeholder="Pages, instructions, or a reminder to yourself…"></textarea>
+          <label class="check"><input id="completed" type="checkbox" name="completed"> Already completed</label>
+          <div class="actions"><button class="primary" id="save" type="submit">Add assignment</button><button id="cancel" type="button" hidden>Cancel edit</button></div>
+        </fieldset></form><p class="small muted">Assignments and notes are public. An internet connection is needed to save changes.</p>
+      </section>
+      <section class="work" aria-labelledby="list-title"><div class="list-heading"><h2 id="list-title">Assignments</h2><span id="count" class="muted">—</span></div>
+        <div id="filters" class="filters" role="group" aria-label="Assignment filters"><button data-filter="all" aria-pressed="true">All</button><button data-filter="today" aria-pressed="false">Today</button><button data-filter="upcoming" aria-pressed="false">Upcoming</button><button data-filter="overdue" aria-pressed="false">Overdue</button><button data-filter="completed" aria-pressed="false">Completed</button></div>
+        <label class="class-filter" for="class-filter">Class <select id="class-filter"><option value="">All classes</option></select></label>
+        <div id="assignments" aria-busy="true"><div class="empty">Loading assignments from the cloud…</div></div>
+      </section>
+    </div>
+    <footer>One assignment at a time. <span>Made for your everyday school days.</span></footer>
+    <noscript><p class="notice">Enable JavaScript to connect to Supabase and use the tracker.</p></noscript>
+  </main>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "rishaandas.com",
+  "version": "1.0.0",
+  "description": "Static personal website; development tests for the homework tracker",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rdogif/rishaandas.com.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/rdogif/rishaandas.com/issues"
+  },
+  "homepage": "https://github.com/rdogif/rishaandas.com#readme",
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@playwright/test": "^1.64.0"
+  }
+}

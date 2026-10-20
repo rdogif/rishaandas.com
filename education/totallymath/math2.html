@@ -35,4 +35,42 @@ let oldDraw=draw;draw=function(){oldDraw();if(pickup){let ox=W/2-player.x,oy=H/2
 </script><script>
 // Floor identities and ending transition.
 const floorTint=['#8db8c0','#759fc2','#a17cad','#b76f6f','#74b48b','#9da6ba','#c45563'];let finishLevel=newLevel;newLevel=function(){if(level===0){bossDefeated=true;document.getElementById('finalScore').textContent='FINAL SCORE // '+score;document.getElementById('ending').classList.add('show');return}finishLevel();document.querySelector('.game-shell').style.filter='hue-rotate('+(level*13)+'deg) saturate('+(1+level*.06)+')'};document.getElementById('restart').onclick=()=>location.reload();
-</script></body></html>
+</script>
+<style>
+.mobile-ui{display:none;position:absolute;inset:0;z-index:12;pointer-events:none}
+.mobile-ui button{pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;border:1px solid #8bece6aa;background:#102c37c9;color:#d9ffff;border-radius:50%;font:800 13px 'Space Mono',monospace;box-shadow:0 0 16px #0009}
+.mobile-ui button:active{background:#27727b}
+.aim-zone{position:absolute;right:15px;bottom:118px;width:126px;height:126px;border:2px solid #71e9e077;border-radius:50%;background:#71e9e011;pointer-events:auto;touch-action:none}
+.aim-zone:after{content:'AIM';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#a5eae6;font:700 12px 'Space Mono';pointer-events:none}
+.mobile-fire{position:absolute;right:19px;bottom:18px;width:82px;height:82px;background:#8d2637dc!important;border-color:#ff8996!important}
+.mobile-reload{position:absolute;right:113px;bottom:25px;width:65px;height:65px}
+@media(pointer:coarse){.mobile-ui{display:block}.joystick{display:block!important;left:24px!important;right:auto!important;bottom:32px!important;width:124px;height:124px}.joyknob{left:37px;top:37px}.stats{bottom:auto;top:76px;width:185px;padding:7px}.ammo{bottom:auto;top:82px;font-size:35px}.crosshair{opacity:.75}.topbar{height:65px}.brand{font-size:20px}.mission{font-size:8px}}
+@media(pointer:coarse) and (max-height:430px){.joystick{bottom:12px!important}.aim-zone{bottom:78px;width:92px;height:92px}.mobile-fire{bottom:8px;width:65px;height:65px}.mobile-reload{bottom:9px;right:96px;width:53px;height:53px}.stats{top:55px}.ammo{top:60px}}
+</style>
+<div class="mobile-ui" id="mobileUI"><div class="aim-zone" id="aimZone" aria-label="Drag to aim"></div><button class="mobile-fire" id="mobileFire" aria-label="Hold to fire">FIRE</button><button class="mobile-reload" id="mobileReload" aria-label="Reload">RELOAD</button></div>
+<script>
+(()=>{
+  const oldJoy=document.getElementById('joy');
+  const joy=oldJoy.cloneNode(true);oldJoy.replaceWith(joy);
+  const knob=joy.querySelector('.joyknob');
+  let movePointer=null,aimPointer=null,firePointer=null;
+  const moveKeys={w:false,a:false,s:false,d:false};
+  function moveStick(e){const r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const radius=38,length=Math.hypot(dx,dy);if(length>radius){dx=dx/length*radius;dy=dy/length*radius}knob.style.transform=`translate(${dx}px,${dy}px)`;keys.a=dx<-9;keys.d=dx>9;keys.w=dy<-9;keys.s=dy>9}
+  joy.addEventListener('pointerdown',e=>{e.preventDefault();if(movePointer!==null)return;movePointer=e.pointerId;joy.setPointerCapture(e.pointerId);moveStick(e)});
+  joy.addEventListener('pointermove',e=>{if(e.pointerId===movePointer){e.preventDefault();moveStick(e)}});
+  function stopMove(e){if(e.pointerId!==movePointer)return;movePointer=null;['w','a','s','d'].forEach(k=>keys[k]=false);knob.style.transform=''}
+  joy.addEventListener('pointerup',stopMove);joy.addEventListener('pointercancel',stopMove);
+  const aim=document.getElementById('aimZone');
+  function aimAt(e){const r=c.getBoundingClientRect();const dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);const distance=Math.hypot(dx,dy);if(distance>8){const angle=Math.atan2(dy,dx);mouse.x=W/2+Math.cos(angle)*Math.min(W,H)*.3;mouse.y=H/2+Math.sin(angle)*Math.min(W,H)*.3}}
+  aim.addEventListener('pointerdown',e=>{e.preventDefault();if(aimPointer!==null)return;aimPointer=e.pointerId;aim.setPointerCapture(e.pointerId);aimAt(e)});
+  aim.addEventListener('pointermove',e=>{if(e.pointerId===aimPointer){e.preventDefault();aimAt(e)}});
+  const stopAim=e=>{if(e.pointerId===aimPointer)aimPointer=null};aim.addEventListener('pointerup',stopAim);aim.addEventListener('pointercancel',stopAim);
+  const fire=document.getElementById('mobileFire');
+  fire.addEventListener('pointerdown',e=>{e.preventDefault();if(firePointer!==null)return;firePointer=e.pointerId;fire.setPointerCapture(e.pointerId);mouse.down=true});
+  function stopFire(e){if(e.pointerId===firePointer){firePointer=null;mouse.down=false}}fire.addEventListener('pointerup',stopFire);fire.addEventListener('pointercancel',stopFire);
+  document.getElementById('mobileReload').addEventListener('pointerdown',e=>{e.preventDefault();reload()});
+  document.addEventListener('contextmenu',e=>{if(e.target.closest('.mobile-ui,.joystick,canvas'))e.preventDefault()});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){mouse.down=false;firePointer=null;movePointer=null;['w','a','s','d'].forEach(k=>keys[k]=false)}});
+})();
+</script>
+</body></html>

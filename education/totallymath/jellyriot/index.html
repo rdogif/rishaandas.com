@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#240d39">
+    <meta name="description" content="Slice, squish, and smash colorful jelly blobs in this physics-based arcade game!">
+    <title>JELLY//RIOT | Totally Math</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #060c19;
+            color: white;
+            font: 600 1rem system-ui, sans-serif;
+            overscroll-behavior: none;
+        }
+        #player {
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
+            height: 100vh;
+            height: 100dvh;
+            background: #060c19;
+        }
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .5rem;
+            padding: .25rem max(.75rem, env(safe-area-inset-right)) .25rem max(.75rem, env(safe-area-inset-left));
+            background: #240d39;
+        }
+        a, button {
+            display: inline-flex;
+            align-items: center;
+            min-height: 44px;
+            color: inherit;
+        }
+        button {
+            font: inherit;
+            cursor: pointer;
+            background: #3b185b;
+            border: 1px solid #b287dd;
+            border-radius: .5rem;
+            padding: 0 .75rem;
+        }
+        iframe { display: block; width: 100%; height: 100%; border: 0; }
+        #player.expanded { position: fixed; inset: 0; height: auto; grid-template-rows: minmax(0, 1fr); }
+        #player.expanded nav { position: absolute; z-index: 1; right: 0; bottom: 68px; background: transparent; }
+        #player.expanded a { display: none; }
+    </style>
+</head>
+<body>
+    <main id="player">
+        <nav aria-label="Game controls">
+            <a href="../">← Totally Math</a>
+            <button id="fullscreen" type="button" aria-pressed="false">Fullscreen</button>
+        </nav>
+        <iframe src="play.html" title="JELLY//RIOT game"></iframe>
+    </main>
+    <script>
+        const player = document.getElementById('player');
+        const button = document.getElementById('fullscreen');
+
+        function updateFullscreenButton() {
+            const expanded = document.fullscreenElement === player || player.classList.contains('expanded');
+            button.textContent = expanded ? 'Exit fullscreen' : 'Fullscreen';
+            button.setAttribute('aria-pressed', expanded);
+        }
+
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        button.addEventListener('click', async () => {
+            if (document.fullscreenElement === player) {
+                await document.exitFullscreen();
+            } else if (player.classList.contains('expanded')) {
+                player.classList.remove('expanded');
+            } else {
+                try {
+                    await player.requestFullscreen();
+                } catch {
+                    player.classList.add('expanded');
+                }
+            }
+            updateFullscreenButton();
+        });
+    </script>
+</body>
+</html>

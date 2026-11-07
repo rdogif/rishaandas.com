@@ -9,7 +9,7 @@ const balls=[],pieces=[],particles=[],ripples=[],texts=[],links=[],trail=[],star
 const toScreen=p=>({x:W*.5+p.x*S,y:H*.61-p.y*S}),toWorld=p=>({x:(p.x-W*.5)/S,y:(H*.61-p.y)/S});
 function safeRead(k){try{return +(localStorage.getItem(k)||0)}catch{return 0}}function safeWrite(k,v){try{localStorage.setItem(k,String(v))}catch{}}
 best=safeRead('jellyriot-best-v2');$('menuBest').textContent=best.toLocaleString();
-function resize(){W=innerWidth;H=innerHeight;S=Math.min(W/(W<650?9.8:15.5),H/(W<650?12:9.2));DPR=Math.min(devicePixelRatio||1,matchMedia("(pointer: coarse)").matches?1.5:2);for(const c of [canvas,bg,fxCanvas]){c.width=Math.floor(W*DPR);c.height=Math.floor(H*DPR);c.style.width=W+'px';c.style.height=H+'px'}for(const c of [ctx,bctx,fctx])c.setTransform(DPR,0,0,DPR,0,0);setupGlSize();drawBackground();poolDirty=true}
+function resize(){W=innerWidth;H=innerHeight;S=Math.min(W/(W<650?9.8:15.5),H/(W<650?12:9.2));DPR=Math.min(devicePixelRatio||1,matchMedia("(pointer: coarse)").matches?1.5:2)*Math.max(.75,quality);for(const c of [canvas,bg,fxCanvas]){c.width=Math.floor(W*DPR);c.height=Math.floor(H*DPR);c.style.width=W+'px';c.style.height=H+'px'}for(const c of [ctx,bctx,fctx])c.setTransform(DPR,0,0,DPR,0,0);setupGlSize();drawBackground();poolDirty=true}
 addEventListener('resize',resize,{passive:true});
 /* REAL GPU metaball visualization: smooth SDF unions. The targets remain individual
    game objects so pointer hit testing is reliable, even if their images fuse. */
@@ -27,7 +27,7 @@ else{d=pow(pow(abs(v.x),1.42)+pow(abs(v.y),1.42),1.0/1.42)-r*.91;}
 return d;}
 float smoothUnion(float a,float b,float k){float h=clamp(.5+.5*(b-a)/k,0.0,1.0);return mix(b,a,h)-k*h*(1.0-h);}
 void main(){vec2 p=vec2(gl_FragCoord.x,uResolution.y-gl_FragCoord.y);float d=100000.0;float nearDist=100000.0;vec2 nearVec=vec2(0.0);float nearR=1.0;vec3 colorSum=vec3(0.0);float weights=0.0;float pressure=0.0;float localWave=0.0;
-for(int i=0;i<14;i++){if(i>=uCount)break;vec4 b=uBalls[i];float di=sdf(p,b,float(i)*1.73);float w=exp(-max(di,-38.0)/max(12.0,b.z*.22));colorSum+=uColors[i]*w;weights+=w;if(di<nearDist){nearDist=di;nearVec=(p-b.xy)/b.z;nearR=b.z;pressure=uPress[i];}d=smoothUnion(d,di,min(b.z*.32,26.0));}
+for(int i=0;i<14;i++){if(i>=uCount)break;vec4 b=uBalls[i];vec2 offset=abs(p-b.xy);if(max(offset.x,offset.y)>b.z*1.4+48.0)continue;float di=sdf(p,b,float(i)*1.73);float w=exp(-max(di,-38.0)/max(12.0,b.z*.22));colorSum+=uColors[i]*w;weights+=w;if(di<nearDist){nearDist=di;nearVec=(p-b.xy)/b.z;nearR=b.z;pressure=uPress[i];}d=smoothUnion(d,di,min(b.z*.32,26.0));}
 if(d>38.0){gl_FragColor=vec4(0.0);return;}
 vec3 col=colorSum/max(weights,.001);float inside=1.0-smoothstep(-2.0,1.6,d);float glow=exp(-max(d,0.0)*.12)*.18;
 float rim=exp(-abs(d)*.10);vec2 g=vec2(dFdx(d),-dFdy(d));vec3 n=normalize(vec3(g.x,g.y,1.25));vec3 light=normalize(vec3(-.6,.9,1.45));float diffuse=clamp(dot(n,light),.0,1.0);float spec=pow(max(dot(reflect(-light,n),normalize(vec3(.0,.05,1.0))),0.0),21.0);
@@ -41,7 +41,43 @@ function compileShader(gl,type,src){const s=gl.createShader(type);gl.shaderSourc
 function initGL(){try{const gl=glCanvas.getContext('webgl',{alpha:true,antialias:false,premultipliedAlpha:false,preserveDrawingBuffer:false})||glCanvas.getContext('experimental-webgl');if(!gl)throw Error('No WebGL');const ext=gl.getExtension('OES_standard_derivatives');if(!ext)throw Error('WebGL derivatives unavailable');let frag='#extension GL_OES_standard_derivatives : enable\n'+fragmentSource;const prog=gl.createProgram();gl.attachShader(prog,compileShader(gl,gl.VERTEX_SHADER,vertexSource));gl.attachShader(prog,compileShader(gl,gl.FRAGMENT_SHADER,frag));gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));gl.useProgram(prog);const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);const loc=gl.getAttribLocation(prog,'aPoint');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);GL=gl;glProgram=prog;glBuffer=buffer;glUniforms={resolution:gl.getUniformLocation(prog,'uResolution'),time:gl.getUniformLocation(prog,'uTime'),count:gl.getUniformLocation(prog,'uCount'),balls:gl.getUniformLocation(prog,'uBalls[0]'),colors:gl.getUniformLocation(prog,'uColors[0]'),press:gl.getUniformLocation(prog,'uPress[0]')};glReady=true;gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);setupGlSize();return true}catch(err){console.warn('GPU metaballs unavailable; using canvas jelly renderer:',err);glCanvas.style.display='none';glReady=false;return false}}
 function setupGlSize(){if(!GL)return;glPixel=clamp(Math.min(DPR,1.15)*quality,.45,1.1);glCanvas.width=Math.max(1,Math.floor(W*glPixel));glCanvas.height=Math.max(1,Math.floor(H*glPixel));GL.viewport(0,0,glCanvas.width,glCanvas.height)}
 const glBallData=new Float32Array(14*4),glColorData=new Float32Array(14*3),glPressData=new Float32Array(14);
-function drawMetaballs(){if(!glReady)return;const gl=GL;gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);let count=0;const list=active?balls:previewBalls;for(const b of list){if(b.bomb||b.special||count>=14)continue;const p=toScreen(b),r=b.r*S*(b.wobbleScale||1);glBallData.set([p.x*glPixel,p.y*glPixel,r*glPixel,b.type],count*4);const rgb=b.color.rgb;glColorData.set(rgb,count*3);glPressData[count]=b.press||0;count++}if(!count)return;gl.uniform2f(glUniforms.resolution,glCanvas.width,glCanvas.height);gl.uniform1f(glUniforms.time,gameT);gl.uniform1i(glUniforms.count,count);gl.uniform4fv(glUniforms.balls,glBallData);gl.uniform3fv(glUniforms.colors,glColorData);gl.uniform1fv(glUniforms.press,glPressData);gl.drawArrays(gl.TRIANGLES,0,6)}
+function drawMetaballs() {
+    if (!glReady) return;
+    const gl = GL;
+    gl.disable(gl.SCISSOR_TEST);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    let count = 0;
+    let left = W, top = H, right = 0, bottom = 0;
+    for (const b of active ? balls : previewBalls) {
+        if (b.bomb || b.special || count >= 14) continue;
+        const p = toScreen(b);
+        const r = b.r * S * (b.wobbleScale || 1);
+        const margin = r * 1.4 + 48 / glPixel;
+        if (p.x + margin < 0 || p.x - margin > W || p.y + margin < 0 || p.y - margin > H) continue;
+        glBallData.set([p.x * glPixel, p.y * glPixel, r * glPixel, b.type], count * 4);
+        glColorData.set(b.color.rgb, count * 3);
+        glPressData[count++] = b.press || 0;
+        left = Math.min(left, p.x - margin);
+        top = Math.min(top, p.y - margin);
+        right = Math.max(right, p.x + margin);
+        bottom = Math.max(bottom, p.y + margin);
+    }
+    if (!count) return;
+    // Shade only the area that can contain jelly or its glow.
+    const x = Math.max(0, Math.floor(left * glPixel));
+    const y = Math.max(0, Math.floor((H - bottom) * glPixel));
+    gl.enable(gl.SCISSOR_TEST);
+    gl.scissor(x, y, Math.min(glCanvas.width, Math.ceil(right * glPixel)) - x,
+        Math.min(glCanvas.height, Math.ceil((H - top) * glPixel)) - y);
+    gl.uniform2f(glUniforms.resolution, glCanvas.width, glCanvas.height);
+    gl.uniform1f(glUniforms.time, gameT);
+    gl.uniform1i(glUniforms.count, count);
+    gl.uniform4fv(glUniforms.balls, glBallData);
+    gl.uniform3fv(glUniforms.colors, glColorData);
+    gl.uniform1fv(glUniforms.press, glPressData);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
 /* Polygon geometry: every visible target has a precise underlying outline. */
 function shapeRadius(type,a){if(type===0)return 1;if(type===1){const c=Math.cos(a),s=Math.sin(a);return .92/Math.pow(Math.pow(Math.abs(c),3.35)+Math.pow(Math.abs(s),3.35),1/3.35)}if(type===2)return 1+.10*Math.cos(5*a);if(type===3){const c=Math.cos(a)/1.19,s=Math.sin(a)/.82;return 1/Math.hypot(c,s)}if(type===4)return 1+.075*Math.cos(6*a);const c=Math.cos(a),s=Math.sin(a);return .92/Math.pow(Math.pow(Math.abs(c),1.42)+Math.pow(Math.abs(s),1.42),1/1.42)}
 function shapePolygon(b,n=78,inflate=1){const points=[];const angle=b.angle||0,c=Math.cos(angle),s=Math.sin(angle),r=b.r*(b.wobbleScale||1)*inflate,press=b.press||0;for(let i=0;i<n;i++){const a=i*TAU/n,rad=shapeRadius(b.type,a)*r*(1+.025*Math.sin(3*a+gameT*5+b.phase)+.015*Math.cos(7*a-gameT*3+b.phase));let x=Math.cos(a)*rad*(1-press*.03),y=Math.sin(a)*rad*(1+press*.055);points.push({x:b.x+x*c-y*s,y:b.y+x*s+y*c})}return points}
@@ -62,20 +98,48 @@ function deposit(x,z,r=.20,energy=1){const cx=PCW*(.5+x/17),cy=PCH*(.45+z*.18),r
 function groundSplash(x,z=0,r=.20,n=6){deposit(x,z,r);for(let i=0;i<n;i++){const a=rand(0,TAU),q=rand(.18,.65);deposit(x+Math.cos(a)*q,z+Math.sin(a)*q*.9,rand(.04,.11),.48)}}
 function rebuildPool(){if(!poolDirty)return;poolDirty=false;const img=pc.createImageData(PCW,PCH),px=img.data;for(let y=1;y<PCH-1;y++)for(let x=1;x<PCW-1;x++){const i=y*PCW+x,f=poolField[i],edge=clamp((f-.31)*5,0,1),deep=clamp((f-.65)*.4,0,1),highlight=clamp((f-poolField[i-PCW])*1.8,0,1),j=i*4;if(!edge)continue;px[j]=Math.round(208-deep*103+highlight*45);px[j+1]=Math.round(25-deep*13+highlight*35);px[j+2]=Math.round(68-deep*31+highlight*34);px[j+3]=Math.round(237*edge)}pc.putImageData(img,0,0)}
 /* Visual systems */
-function drawBackground(){bctx.clearRect(0,0,W,H);let g=bctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#081326');g.addColorStop(.55,'#0d1730');g.addColorStop(1,'#100f27');bctx.fillStyle=g;bctx.fillRect(0,0,W,H);
+const scenery = document.createElement('canvas');
+const vignette = document.createElement('canvas');
+let backgroundWidth = 0, backgroundHeight = 0;
+function drawBackground() {
+    if (backgroundWidth !== bg.width || backgroundHeight !== bg.height) {
+        backgroundWidth = bg.width;
+        backgroundHeight = bg.height;
+        buildBackground();
+        scenery.width = bg.width;
+        scenery.height = bg.height;
+        scenery.getContext('2d').drawImage(bg, 0, 0);
+        vignette.width = bg.width;
+        vignette.height = bg.height;
+        const vctx = vignette.getContext('2d');
+        vctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        const vig = vctx.createRadialGradient(W*.5,H*.52,Math.min(W,H)*.13,W*.5,H*.5,Math.max(W,H)*.85);
+        vig.addColorStop(0, '#00000000');
+        vig.addColorStop(1, '#040714a0');
+        vctx.fillStyle = vig;
+        vctx.fillRect(0, 0, W, H);
+        poolDirty = true;
+    }
+    if (!poolDirty) return;
+    rebuildPool();
+    bctx.clearRect(0, 0, W, H);
+    bctx.drawImage(scenery, 0, 0, W, H);
+    bctx.globalAlpha = .96;
+    bctx.drawImage(poolCanvas, 0, H*.765, W, H*.245);
+    bctx.globalAlpha = 1;
+    bctx.drawImage(vignette, 0, 0, W, H);
+}
+function buildBackground(){bctx.clearRect(0,0,W,H);let g=bctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#081326');g.addColorStop(.55,'#0d1730');g.addColorStop(1,'#100f27');bctx.fillStyle=g;bctx.fillRect(0,0,W,H);
  const halo=bctx.createRadialGradient(W*.49,H*.47,10,W*.49,H*.45,Math.max(W,H)*.6);halo.addColorStop(0,'#25486b75');halo.addColorStop(.34,'#14335945');halo.addColorStop(1,'#08112600');bctx.fillStyle=halo;bctx.fillRect(0,0,W,H);
  for(const s of stars){bctx.globalAlpha=s.a;bctx.fillStyle='#b9e6ff';bctx.beginPath();bctx.arc(s.x*W,s.y*H*.83,s.r,0,TAU);bctx.fill()}bctx.globalAlpha=1;
  const horizon=H*.75;bctx.fillStyle='#070c1b77';bctx.fillRect(0,horizon,W,H-horizon);bctx.beginPath();bctx.moveTo(0,horizon);bctx.lineTo(W,horizon);bctx.lineWidth=2;bctx.strokeStyle='#51e6ef4e';bctx.shadowBlur=21;bctx.shadowColor='#51e6ef';bctx.stroke();bctx.shadowBlur=0;
  bctx.save();bctx.beginPath();bctx.rect(0,horizon,W,H-horizon);bctx.clip();const vanX=W*.5,vanY=horizon-8;bctx.lineWidth=1;for(let i=-25;i<=25;i++){const bx=W*.5+i*W/12;bctx.beginPath();bctx.moveTo(vanX,vanY);bctx.lineTo(bx,H*1.15);bctx.strokeStyle=i%5===0?'#4cebf42b':'#4ae2f419';bctx.stroke()}for(let i=0;i<18;i++){const y=horizon+(H-horizon)*((i/18)**1.7);bctx.beginPath();bctx.moveTo(0,y);bctx.lineTo(W,y);bctx.strokeStyle='#6afcff'+(i%3===0?'30':'15');bctx.stroke()}bctx.restore();
  // Side pylons and sci-fi observatory detailing.
  bctx.fillStyle='#79b8f20a';for(let i=0;i<6;i++){const x=W*(.1+i*.16);bctx.fillRect(x,H*.2,1,H*.55)}bctx.strokeStyle='#9ef5ff16';bctx.lineWidth=1;bctx.beginPath();bctx.ellipse(W*.5,H*.82,W*.31,H*.065,0,0,TAU);bctx.stroke();bctx.beginPath();bctx.ellipse(W*.5,H*.825,W*.38,H*.095,0,0,TAU);bctx.stroke();
- // Permanent liquid sheen, rendered over the actual lab floor.
- if(poolDirty)rebuildPool();bctx.globalAlpha=.96;bctx.drawImage(poolCanvas,0,H*.765,W,H*.245);bctx.globalAlpha=1;
- // Vignette.
- const vig=bctx.createRadialGradient(W*.5,H*.52,Math.min(W,H)*.13,W*.5,H*.5,Math.max(W,H)*.85);vig.addColorStop(0,'#00000000');vig.addColorStop(1,'#040714a0');bctx.fillStyle=vig;bctx.fillRect(0,0,W,H);
 }
-function drawDynamicBg(){const t=gameT;bctx.save();bctx.globalCompositeOperation='screen';for(let i=0;i<3;i++){const x=W*(.25+i*.28),y=H*(.22+Math.sin(t*.45+i)*.05);const radius=Math.min(W,H)*(.22+i*.055),grad=bctx.createRadialGradient(x,y,0,x,y,radius);grad.addColorStop(0,i===1?'#7ffffd0a':'#ff6cbe09');grad.addColorStop(1,'#00000000');bctx.fillStyle=grad;bctx.fillRect(x-radius,y-radius,radius*2,radius*2)}bctx.restore();
- bctx.save();bctx.translate(W*.5,H*.45);bctx.rotate(Math.sin(t*.14)*.1);bctx.strokeStyle='#8dd7ee15';bctx.lineWidth=1;for(let i=0;i<3;i++){bctx.beginPath();bctx.ellipse(0,0,Math.min(W*.35,490)+i*50,Math.min(H*.33,290)+i*50,0,0,TAU);bctx.stroke()}bctx.restore();
+
+function drawDynamicBg(){const t=gameT;ctx.save();ctx.globalCompositeOperation='screen';for(let i=0;i<3;i++){const x=W*(.25+i*.28),y=H*(.22+Math.sin(t*.45+i)*.05);const radius=Math.min(W,H)*(.22+i*.055),grad=ctx.createRadialGradient(x,y,0,x,y,radius);grad.addColorStop(0,i===1?'#7ffffd0a':'#ff6cbe09');grad.addColorStop(1,'#00000000');ctx.fillStyle=grad;ctx.fillRect(x-radius,y-radius,radius*2,radius*2)}ctx.restore();
+ ctx.save();ctx.translate(W*.5,H*.45);ctx.rotate(Math.sin(t*.14)*.1);ctx.strokeStyle='#8dd7ee15';ctx.lineWidth=1;for(let i=0;i<3;i++){ctx.beginPath();ctx.ellipse(0,0,Math.min(W*.35,490)+i*50,Math.min(H*.33,290)+i*50,0,0,TAU);ctx.stroke()}ctx.restore();
 }
 function makeParticle(x,y,vx,vy,kind='juice',color='#ff4e83',size=rand(.026,.075),life=rand(.45,1.15)){if(particles.length>400)particles.shift();particles.push({x,y,vx,vy,kind,color,size,life,max:life,angle:rand(0,TAU),spin:rand(-5,5),z:rand(-1,1),bounce:0})}
 function burstAt(x,y,color,amount=26,blood=false){for(let i=0;i<amount;i++){const a=rand(0,TAU),speed=rand(1.5,7.3);makeParticle(x,y,Math.cos(a)*speed,Math.sin(a)*speed+1.5,blood?'syrup':(Math.random()<.35?'shard':'spark'),blood?['#ff416b','#dc1646','#ff91a5'][i%3]:color,rand(.018,.09),rand(.45,1.65))}ripples.push({x,y,r:.1,life:.55,max:.55,color:blood?'#ff657e':color})}
@@ -120,7 +184,7 @@ function pieceDraw(p){const screen=toScreen(p),sx=p.sx||1,sy=p.sy||1,maxR=p.radi
  if(p.cut.length>=2){ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();p.cut.forEach((v,i)=>{i?ctx.lineTo(v.x*S,-v.y*S):ctx.moveTo(v.x*S,-v.y*S)});ctx.shadowBlur=15;ctx.shadowColor='#ff526c';ctx.strokeStyle='#5c1239';ctx.lineWidth=Math.max(5,S*.095);ctx.stroke();ctx.strokeStyle='#ed366a';ctx.lineWidth=Math.max(3,S*.057);ctx.stroke();ctx.shadowBlur=0;ctx.strokeStyle='#ffb6bd';ctx.lineWidth=Math.max(1.2,S*.023);ctx.stroke()}
  ctx.restore()}
 function particleDraw(p){const q=toScreen(p),r=Math.max(1.3,p.size*S),alpha=clamp(p.life/p.max,0,1);ctx.save();ctx.translate(q.x,q.y);ctx.rotate(p.angle);ctx.globalAlpha=alpha;if(p.kind==='shard'){ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=5;ctx.beginPath();ctx.moveTo(0,-r*1.3);ctx.lineTo(r*.5,r*.4);ctx.lineTo(-r*.35,r*.95);ctx.closePath();ctx.fill()}else if(p.kind==='spark'){ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=12;ctx.fillRect(-r*.5,-r*.5,r,r)}else{const g=ctx.createRadialGradient(-r*.25,-r*.3,0,0,0,r*1.1);g.addColorStop(0,'#ffc4d2');g.addColorStop(.27,p.color);g.addColorStop(1,'#8a1539');ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(0,0,r*.75,r*1.1,.1,0,TAU);ctx.fill()}ctx.restore()}
-function drawScene(){ctx.clearRect(0,0,W,H);const jitterX=rand(-shake,shake)*S*.02,jitterY=rand(-shake,shake)*S*.02;ctx.save();ctx.translate(jitterX,jitterY);if(!glReady){const list=active?balls:previewBalls;drawCanvasBridges(list);for(const b of list)if(!b.bomb&&!b.special)drawJellyFallback(b)}else{for(const b of active?balls:previewBalls)drawDecorativeGleams(b)}for(const b of balls)if(!b.bomb&&!b.special)drawPressureMark(b);for(const b of balls){if(b.bomb)drawBomb(b);else if(b.special)drawSpecial(b)}for(const p of pieces)pieceDraw(p);for(const p of particles)particleDraw(p);
+function drawScene(){ctx.clearRect(0,0,W,H);drawDynamicBg();const jitterX=rand(-shake,shake)*S*.02,jitterY=rand(-shake,shake)*S*.02;ctx.save();ctx.translate(jitterX,jitterY);if(!glReady){const list=active?balls:previewBalls;drawCanvasBridges(list);for(const b of list)if(!b.bomb&&!b.special)drawJellyFallback(b)}else{for(const b of active?balls:previewBalls)drawDecorativeGleams(b)}for(const b of balls)if(!b.bomb&&!b.special)drawPressureMark(b);for(const b of balls){if(b.bomb)drawBomb(b);else if(b.special)drawSpecial(b)}for(const p of pieces)pieceDraw(p);for(const p of particles)particleDraw(p);
 for(const r of ripples){const sc=toScreen(r);ctx.strokeStyle=r.color;ctx.lineWidth=2.2;ctx.globalAlpha=clamp(r.life/r.max,0,1)*.67;ctx.beginPath();ctx.arc(sc.x,sc.y,r.r*S,0,TAU);ctx.stroke();ctx.globalAlpha=1}ctx.restore();if(flash>0){ctx.fillStyle=`rgba(255,130,170,${flash*.12})`;ctx.fillRect(0,0,W,H)}}
 /* Slice mechanics. Swipe is followed continuously; cut fires immediately upon EXIT,
    not on mouseup. Both curved paths and diagonals preserve their orientation. */
@@ -135,8 +199,11 @@ function splitBall(b,path){if(!balls.includes(b)||slicedThisStroke.has(b.id))ret
 function bombStrike(b){if(!balls.includes(b))return;removeBall(b);shake=28;flash=1;burstAt(b.x,b.y,'#ff7450',78,false);for(let i=0;i<8;i++)ripples.push({x:b.x,y:b.y,r:i*.15,life:.55+i*.04,max:.55+i*.04,color:i%2?'#ffca6f':'#ff4876'});health=Math.max(0,health-1);combo=0;charge=Math.max(0,charge-15);playSound('bomb');addToast(b.x,b.y,'BOOM!  −1 LIFE','#ff799a');updateHUD();if(health===0&&mode==='arcade')setTimeout(()=>{if(active)finish(false)},430)}
 function specialStrike(b){if(!balls.includes(b))return;removeBall(b);burstAt(b.x,b.y,b.special==='star'?'#ffe788':'#8eeafa',43);playSound('pickup');if(b.special==='clock'&&mode==='arcade'){timeLeft=Math.min(90,timeLeft+7);addToast(b.x,b.y,'+7 SECONDS','#9efaff')}else{score+=100;charge=clamp(charge+25,0,100);addToast(b.x,b.y,'BONUS +100','#ffe688');if(score>best){best=Math.floor(score);safeWrite('jellyriot-best-v2',best)}}updateHUD()}
 function hitBall(b,path){if(b.bomb)bombStrike(b);else if(b.special)specialStrike(b);else splitBall(b,path)}
-function recordSegment(a,b){const d=dist(a,b);if(d<.004)return;const steps=Math.min(14,Math.ceil(d/.12));for(let step=0;step<steps;step++){const p={x:lerp(a.x,b.x,step/steps),y:lerp(a.y,b.y,step/steps)},q={x:lerp(a.x,b.x,(step+1)/steps),y:lerp(a.y,b.y,(step+1)/steps)};testAgainstTargets(p,q)}}
-function testAgainstTargets(a,b){for(const ball of balls.slice()){if(slicedThisStroke.has(ball.id))continue;const poly=shapePolygon(ball,72,1.11),wasInside=pointInPoly(a,poly),isInside=pointInPoly(b,poly),hits=segmentHits(a,b,poly);let state=ball.cut;
+function recordSegment(a,b){const d=dist(a,b);if(d<.004)return;const hitPolygons=new Map();const steps=Math.min(14,Math.ceil(d/.12));for(let step=0;step<steps;step++){const p={x:lerp(a.x,b.x,step/steps),y:lerp(a.y,b.y,step/steps)},q={x:lerp(a.x,b.x,(step+1)/steps),y:lerp(a.y,b.y,(step+1)/steps)};testAgainstTargets(p,q,hitPolygons)}}
+function testAgainstTargets(a,b,hitPolygons){for(const ball of balls.slice()){if(slicedThisStroke.has(ball.id))continue;
+ const reach=ball.r*(ball.wobbleScale||1)*1.55;
+ if(!ball.cut&&(Math.max(a.x,b.x)<ball.x-reach||Math.min(a.x,b.x)>ball.x+reach||Math.max(a.y,b.y)<ball.y-reach||Math.min(a.y,b.y)>ball.y+reach))continue;
+ let poly=hitPolygons.get(ball);if(!poly){poly=shapePolygon(ball,72,1.11);hitPolygons.set(ball,poly)}const wasInside=pointInPoly(a,poly),isInside=pointInPoly(b,poly),hits=segmentHits(a,b,poly);let state=ball.cut;
  if(!state){if(wasInside){const back={x:a.x-(b.x-a.x)*10,y:a.y-(b.y-a.y)*10};const revHits=segmentHits(a,back,poly);const start=revHits.length?revHits[0].p:snapBoundary(a,poly).p;state={path:[start,a],distance:dist(start,a)};ball.cut=state}else if(hits.length){state={path:[hits[0].p],distance:0};ball.cut=state}}
  if(!state)continue;ball.press=clamp(ball.press+.18,0,1);
  if(!isInside){const out=hits.length?hits.at(-1).p:b;const lastP=state.path.at(-1);state.distance+=dist(lastP,out);state.path.push(out);ball.cut=null;ball.press=0;if(state.distance>=ball.r*.43&&state.path.length>=2)hitBall(ball,state.path)}else{const lastP=state.path.at(-1);state.distance+=dist(lastP,b);state.path.push(b);if(state.path.length>75)state.path.splice(1,1)}
@@ -147,7 +214,7 @@ canvas.addEventListener('pointerdown',e=>{if(!active||paused||pointerDown)return
 canvas.addEventListener('pointermove',e=>{if(!pointerDown||!active||paused||pointerId!==e.pointerId)return;const p=pointerPos(e),from=lastPointer;if(!from)return;const change=Math.hypot(p.x-from.x,p.y-from.y);if(change>.5){addTrailScreen(from,p);recordSegment(toWorld(from),toWorld(p));lastPointer=p}e.preventDefault()});
 function stopStroke(){pointerDown=false;pointerId=null;lastPointer=null;slicedThisStroke.clear();for(const b of balls){b.cut=null;b.press=0}}
 for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,e=>{if(pointerId===e.pointerId)stopStroke()});window.addEventListener('blur',()=>{stopStroke();if(active)pauseGame(true)});
-function drawTrail(){fctx.clearRect(0,0,W,H);if(trail.length<2)return;fctx.save();fctx.lineCap='round';fctx.lineJoin='round';for(let i=1;i<trail.length;i++){const a=trail[i-1],b=trail[i],life=Math.min(a.life,b.life);if(life<=0)continue;const alpha=clamp(life/.32,0,1);fctx.globalAlpha=alpha*.9;fctx.shadowColor='#34fff4';fctx.shadowBlur=22;fctx.strokeStyle='#39e9f4';fctx.lineWidth=10*alpha;fctx.beginPath();fctx.moveTo(a.x,a.y);fctx.lineTo(b.x,b.y);fctx.stroke();fctx.shadowBlur=0;fctx.strokeStyle='#effffc';fctx.lineWidth=Math.max(.3,2.8*alpha);fctx.stroke()}fctx.restore()}
+function drawTrail(){fctx.clearRect(0,0,W,H);if(trail.length<2)return;fctx.save();fctx.lineCap='round';fctx.lineJoin='round';for(let i=1;i<trail.length;i++){const a=trail[i-1],b=trail[i],life=Math.min(a.life,b.life);if(life<=0)continue;const alpha=clamp(life/.32,0,1);fctx.globalAlpha=alpha*.9;fctx.shadowColor='#34fff4';fctx.shadowBlur=0;fctx.strokeStyle='#39e9f455';fctx.lineWidth=15*alpha;fctx.beginPath();fctx.moveTo(a.x,a.y);fctx.lineTo(b.x,b.y);fctx.stroke();fctx.shadowBlur=0;fctx.strokeStyle='#effffc';fctx.lineWidth=Math.max(.3,2.8*alpha);fctx.stroke()}fctx.restore()}
 /* Cut halves have their own gravity, soft-body squash, bounce, friction and settling. */
 const FLOOR_Y=-3.48;
 function pieceLowestY(p){const c=Math.cos(p.angle),s=Math.sin(p.angle);let min=1e4;for(const v of p.points){const y=v.x*p.sx*s+v.y*p.sy*c;if(y<min)min=y}return min}
@@ -168,9 +235,27 @@ $('playBtn').addEventListener('click',()=>resetGame('arcade'));$('zenBtn').addEv
 $('pauseBtn').addEventListener('click',()=>{ensureAudio();pauseGame(!paused)});
 $('soundBtn').addEventListener('click',()=>{ensureAudio();soundOn=!soundOn;$('soundBtn').textContent=soundOn?'♪':'♪̸';$('soundBtn').title=soundOn?'Mute':'Unmute'});
 addEventListener('keydown',e=>{if(e.key.toLowerCase()==='p'||e.key==='Escape'){if(active)pauseGame(!paused);e.preventDefault()}if(e.key.toLowerCase()==='m'){$('soundBtn').click()}});
-let noGlWarned=false;
-function loop(now){requestAnimationFrame(loop);let dt=clamp((now-last)/1000,0,.038);last=now;frame++;if(active&&!paused){physicsUpdate(dt*(slow>0?.42:1));slow=Math.max(0,slow-dt)}else if(!active){gameT+=dt;for(let i=0;i<previewBalls.length;i++){const b=previewBalls[i];b.y=[.3,.7,.0][i]+Math.sin(gameT*1.5+i*2)*.25;b.x=[-2.4,-.85,1.6][i]+Math.cos(gameT*.9+i)*.13;b.angle=Math.sin(gameT*.6+i)*.18;b.wobbleScale=1+.04*Math.sin(gameT*2+i)}}
- drawBackground();drawDynamicBg();drawMetaballs();drawScene();drawTrail();if(frame%5===0)updateHUD();}
+let frameAverage = 16.7, qualityFrames = 0;
+document.addEventListener('visibilitychange', () => {
+    last = performance.now();
+    if (document.hidden && active) pauseGame(true);
+});
+
+function loop(now){requestAnimationFrame(loop);
+ if(document.hidden){last=now;return}
+ const elapsed=now-last;
+ if(paused){last=now;return}
+ if(!active&&elapsed<1000/30)return;
+ if(active&&!paused&&elapsed<1000){
+    frameAverage=frameAverage*.95+elapsed*.05;
+    if(++qualityFrames>=45){
+        qualityFrames=0;
+        const next=clamp(quality+(frameAverage>23?-.15:frameAverage<18?.05:0),.55,1);
+        if(next!==quality){quality=next;resize()}
+    }
+ }
+ let dt=clamp((now-last)/1000,0,.038);last=now;frame++;if(active&&!paused){physicsUpdate(dt*(slow>0?.42:1));slow=Math.max(0,slow-dt)}else if(!active){gameT+=dt;for(let i=0;i<previewBalls.length;i++){const b=previewBalls[i];b.y=[.3,.7,.0][i]+Math.sin(gameT*1.5+i*2)*.25;b.x=[-2.4,-.85,1.6][i]+Math.cos(gameT*.9+i)*.13;b.angle=Math.sin(gameT*.6+i)*.18;b.wobbleScale=1+.04*Math.sin(gameT*2+i)}}
+ drawBackground();drawMetaballs();drawScene();drawTrail();if(frame%5===0)updateHUD();}
 // Browser support: when the GPU shader can't run, beautiful Canvas jelly targets take over.
 initGL();resize();updateHUD();requestAnimationFrame(loop);
 window.JellyRiotDebug={get state(){return{active,paused,score,balls:balls.map(b=>({x:b.x,y:b.y,r:b.r,bomb:b.bomb,type:b.type,special:b.special,id:b.id})),pieces:pieces.length,pieceData:pieces.map(p=>({cut:p.cut,area:p.area,angle:p.angle,x:p.x,y:p.y})),glReady,mode,health,frenzy}},start:()=>resetGame('arcade'),worldToScreen:toScreen,spawn:launch,spawnTest:(x,y,type=0,kind='jelly')=>{launch();const b=balls.at(-1);Object.assign(b,{x,y,type,r:1.0,vx:0,vy:0,bomb:kind==='bomb',special:kind==='star'?'star':null,omega:0});return b.id},clearTargets:()=>{balls.length=0;pieces.length=0}};
